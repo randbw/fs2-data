@@ -207,6 +207,28 @@ class JsonModule(val crossScalaVersion: String) extends Fs2DataModule with Cross
 
 }
 
+object msgpack extends Cross[MessagePackModule](scala212, scala213)
+
+class MessagePackModule(val crossScalaVersion: String) extends Fs2DataModule with CrossScalaModule with PublishModule {
+  outer =>
+
+  def artifactName = "fs2-data-msgpack"
+
+  def publishVersion = fs2DataVersion
+
+  def pomSettings =
+    PomSettings(
+      description = "Streaming MessagePack library",
+      organization = "org.gnieh",
+      url = fs2DataUrl,
+      licenses = Seq(fs2DataLicense),
+      versionControl = VersionControl.github("satabin", "fs2-data"),
+      developers = Seq(fs2DataDeveloper)
+    )
+
+  object test extends Fs2DataTests
+}
+
 object xml extends Cross[XmlModule](scala212, scala213)
 
 class XmlModule(val crossScalaVersion: String) extends Fs2DataModule with CrossScalaModule with PublishModule {
