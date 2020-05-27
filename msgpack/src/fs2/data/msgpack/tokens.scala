@@ -34,4 +34,44 @@ object Token {
   case object FalseValue extends Token("boolean") {
     override def length: Int = 1
   }
+
+  case object PositiveFixnum extends Token("fixnum") {
+    override def length: Int = 1
+  }
+
+  case object NegativeFixnum extends Token("fixnum") {
+    override def length: Int = 1
+  }
+
+  case object UInt8Bit extends Token("uint") {
+    override def length: Int = 2
+  }
+
+  case object UInt16Bit extends Token("uint") {
+    override def length: Int = 3
+  }
+
+  case object UInt32Bit extends Token("uint") {
+    override def length: Int = 5
+  }
+
+  case object UInt64Bit extends Token("uint") {
+    override def length: Int = 9
+  }
+
+  case object Int8Bit extends Token("int") {
+    override def length: Int = 2
+  }
+
+  case object Int16Bit extends Token("int") {
+    override def length: Int = 3
+  }
+
+  case object Int32Bit extends Token("int") {
+    override def length: Int = 5
+  }
+
+  case object Int64Bit extends Token("int") {
+    override def length: Int = 9
+  }
 }
