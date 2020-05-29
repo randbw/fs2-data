@@ -74,4 +74,12 @@ object Token {
   case object Int64Bit extends Token("int") {
     override def length: Int = 9
   }
+
+  case object Float32Bit extends Token("float") {
+    override def length: Int = 5
+  }
+
+  case object Float64Bit extends Token("float") {
+    override def length: Int = 9
+  }
 }
