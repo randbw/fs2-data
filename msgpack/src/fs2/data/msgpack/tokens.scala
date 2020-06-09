@@ -58,4 +58,36 @@ object Token {
   case object Float32Bit extends FixedLength("float", 5)
 
   case object Float64Bit extends FixedLength("float", 9)
+
+  case object FixStr extends UnfixedLength("string") {
+    def getLength(bytes: List[String]): Int =
+      bytes match {
+        case byte :: Nil => Integer.parseInt(byte.drop(3), 2)
+        case _ => -1
+    }
+  }
+
+  case object Str8 extends UnfixedLength("string") {
+    def getLength(bytes: List[String]): Int =
+      bytes match {
+        case byte :: Nil => Integer.parseInt(byte, 2)
+        case _ => -1
+      }
+  }
+
+  case object Str16 extends UnfixedLength("string") {
+    def getLength(bytes: List[String]): Int =
+      bytes match {
+        case b :: bb :: Nil => Integer.parseInt(b.concat(bb), 2)
+        case _ => -1
+      }
+  }
+
+  case object Str32 extends UnfixedLength("string") {
+    def getLength(bytes: List[String]): Int =
+      bytes match {
+        case b :: bb :: bbb :: bbbb :: Nil => Integer.parseInt(b.concat(bb).concat(bbb).concat(bbbb), 2)
+        case _ => -1
+      }
+  }
 }
