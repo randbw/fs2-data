@@ -17,69 +17,45 @@ package fs2
 package data
 package msgpack
 
-sealed abstract class Token(val kind: String) {
-  def length: Int
+sealed trait Token {
+  def kind: String
+}
+
+abstract class FixedLength(val kind: String, val length: Int) extends Token
+
+abstract class UnfixedLength(val kind: String) extends Token {
+  def getLength(bytes: List[String]): Int
 }
 
 object Token {
 
-  case object Nil extends Token("nil") {
-    override def length: Int = 1
-  }
+  case object NilByte extends FixedLength("nil", 1)
 
-  case object TrueValue extends Token("boolean") {
-    override def length: Int = 1
-  }
+  case object TrueValue extends FixedLength("boolean", 1)
 
-  case object FalseValue extends Token("boolean") {
-    override def length: Int = 1
-  }
+  case object FalseValue extends FixedLength("boolean", 1)
 
-  case object PositiveFixnum extends Token("fixnum") {
-    override def length: Int = 1
-  }
+  case object PositiveFixnum extends FixedLength("fixnum", 1)
 
-  case object NegativeFixnum extends Token("fixnum") {
-    override def length: Int = 1
-  }
+  case object NegativeFixnum extends FixedLength("fixnum", 1)
 
-  case object UInt8Bit extends Token("uint") {
-    override def length: Int = 2
-  }
+  case object UInt8Bit extends FixedLength("uint", 2)
 
-  case object UInt16Bit extends Token("uint") {
-    override def length: Int = 3
-  }
+  case object UInt16Bit extends FixedLength("uint", 3)
 
-  case object UInt32Bit extends Token("uint") {
-    override def length: Int = 5
-  }
+  case object UInt32Bit extends FixedLength("uint", 5)
 
-  case object UInt64Bit extends Token("uint") {
-    override def length: Int = 9
-  }
+  case object UInt64Bit extends FixedLength("uint", 9)
 
-  case object Int8Bit extends Token("int") {
-    override def length: Int = 2
-  }
+  case object Int8Bit extends FixedLength("int", 2)
 
-  case object Int16Bit extends Token("int") {
-    override def length: Int = 3
-  }
+  case object Int16Bit extends FixedLength("int", 3)
 
-  case object Int32Bit extends Token("int") {
-    override def length: Int = 5
-  }
+  case object Int32Bit extends FixedLength("int", 5)
 
-  case object Int64Bit extends Token("int") {
-    override def length: Int = 9
-  }
+  case object Int64Bit extends FixedLength("int", 9)
 
-  case object Float32Bit extends Token("float") {
-    override def length: Int = 5
-  }
+  case object Float32Bit extends FixedLength("float", 5)
 
-  case object Float64Bit extends Token("float") {
-    override def length: Int = 9
-  }
+  case object Float64Bit extends FixedLength("float", 9)
 }
