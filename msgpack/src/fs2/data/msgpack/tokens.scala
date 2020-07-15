@@ -23,7 +23,7 @@ sealed trait Token {
 
 abstract class FixedLength(val kind: String, val length: Int) extends Token
 
-abstract class UnfixedLength(val kind: String) extends Token {
+abstract class DynamicLength(val kind: String) extends Token {
   def getLength(bytes: List[String]): Int
 }
 
@@ -59,7 +59,7 @@ object Token {
 
   case object Float64Bit extends FixedLength("float", 9)
 
-  case object FixStr extends UnfixedLength("string") {
+  case object FixStr extends DynamicLength("string") {
     def getLength(bytes: List[String]): Int =
       bytes match {
         case byte :: Nil => Integer.parseInt(byte.drop(3), 2)
@@ -67,7 +67,7 @@ object Token {
     }
   }
 
-  case object Str8 extends UnfixedLength("string") {
+  case object Str8 extends DynamicLength("string") {
     def getLength(bytes: List[String]): Int =
       bytes match {
         case byte :: Nil => Integer.parseInt(byte, 2)
@@ -75,7 +75,7 @@ object Token {
       }
   }
 
-  case object Str16 extends UnfixedLength("string") {
+  case object Str16 extends DynamicLength("string") {
     def getLength(bytes: List[String]): Int =
       bytes match {
         case b :: bb :: Nil => Integer.parseInt(b.concat(bb), 2)
@@ -83,7 +83,7 @@ object Token {
       }
   }
 
-  case object Str32 extends UnfixedLength("string") {
+  case object Str32 extends DynamicLength("string") {
     def getLength(bytes: List[String]): Int =
       bytes match {
         case b :: bb :: bbb :: bbbb :: Nil => Integer.parseInt(b.concat(bb).concat(bbb).concat(bbbb), 2)
