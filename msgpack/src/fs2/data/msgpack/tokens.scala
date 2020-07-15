@@ -73,13 +73,13 @@ object Token {
   case object FixStr extends DynamicLength("string") {
     def getLength(bytes: List[String]): Int =
       bytes.headOption
-        .fold(-1)(byte => DynamicLength.getLength(byte.drop(3), minus1 = false))
+        .fold(-1)(b => DynamicLength.getLength(b.drop(3), minus1 = false))
   }
 
   case object Str8 extends DynamicLength("string") {
     def getLength(bytes: List[String]): Int =
       bytes.headOption
-        .fold(-1)(byte => DynamicLength.getLength(byte, minus1 = true))
+        .fold(-1)(b => DynamicLength.getLength(b, minus1 = true))
   }
 
   case object Str16 extends DynamicLength("string") {
@@ -100,10 +100,8 @@ object Token {
 
   case object Bin8 extends DynamicLength("bin") {
     def getLength(bytes: List[String]): Int =
-      bytes match {
-        case byte :: Nil => DynamicLength.getLength(byte, minus1 = true)
-        case _           => -1
-      }
+      bytes.headOption
+        .fold(-1)(b => DynamicLength.getLength(b, minus1 = true))
   }
 
   case object Bin16 extends DynamicLength("bin") {
