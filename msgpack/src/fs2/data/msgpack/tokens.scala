@@ -27,6 +27,17 @@ abstract class DynamicLength(val kind: String) extends Token {
   def getLength(bytes: List[String]): Int
 }
 
+object DynamicLength {
+  def getLength(b: String, minus1: Boolean): Int =
+    Integer.parseInt(b, 2) - { if (minus1) 1 else 0 }
+
+  def getLength(b: String, bb: String): Int =
+    Integer.parseInt(b.concat(bb), 2) - 1
+
+  def getLength(b: String, bb: String, bbb: String, bbbb: String): Int =
+    Integer.parseInt(b.concat(bb).concat(bbb).concat(bbbb), 2) - 1
+}
+
 object Token {
 
   case object NilByte extends FixedLength("nil", 1)
@@ -61,24 +72,20 @@ object Token {
 
   case object FixStr extends DynamicLength("string") {
     def getLength(bytes: List[String]): Int =
-      bytes match {
-        case byte :: Nil => Integer.parseInt(byte.drop(3), 2)
-        case _           => -1
-      }
+      bytes.headOption
+        .fold(-1)(byte => DynamicLength.getLength(byte.drop(3), minus1 = false))
   }
 
   case object Str8 extends DynamicLength("string") {
     def getLength(bytes: List[String]): Int =
-      bytes match {
-        case byte :: Nil => Integer.parseInt(byte, 2)
-        case _           => -1
-      }
+      bytes.headOption
+        .fold(-1)(byte => DynamicLength.getLength(byte, minus1 = true))
   }
 
   case object Str16 extends DynamicLength("string") {
     def getLength(bytes: List[String]): Int =
       bytes match {
-        case b :: bb :: Nil => Integer.parseInt(b.concat(bb), 2)
+        case b :: bb :: Nil => DynamicLength.getLength(b, bb)
         case _              => -1
       }
   }
@@ -86,7 +93,7 @@ object Token {
   case object Str32 extends DynamicLength("string") {
     def getLength(bytes: List[String]): Int =
       bytes match {
-        case b :: bb :: bbb :: bbbb :: Nil => Integer.parseInt(b.concat(bb).concat(bbb).concat(bbbb), 2)
+        case b :: bb :: bbb :: bbbb :: Nil => DynamicLength.getLength(b, bb, bbb, bbb)
         case _                             => -1
       }
   }
@@ -94,7 +101,7 @@ object Token {
   case object Bin8 extends DynamicLength("bin") {
     def getLength(bytes: List[String]): Int =
       bytes match {
-        case byte :: Nil => Integer.parseInt(byte, 2)
+        case byte :: Nil => DynamicLength.getLength(byte, minus1 = true)
         case _           => -1
       }
   }
@@ -102,7 +109,7 @@ object Token {
   case object Bin16 extends DynamicLength("bin") {
     def getLength(bytes: List[String]): Int =
       bytes match {
-        case b :: bb :: Nil => Integer.parseInt(b.concat(bb), 2)
+        case b :: bb :: Nil => DynamicLength.getLength(b, bb)
         case _              => -1
       }
   }
@@ -110,7 +117,7 @@ object Token {
   case object Bin32 extends DynamicLength("bin") {
     def getLength(bytes: List[String]): Int =
       bytes match {
-        case b :: bb :: bbb :: bbbb :: Nil => Integer.parseInt(b.concat(bb).concat(bbb).concat(bbbb), 2)
+        case b :: bb :: bbb :: bbbb :: Nil => DynamicLength.getLength(b, bb, bbb, bbbb)
         case _                             => -1
       }
   }
