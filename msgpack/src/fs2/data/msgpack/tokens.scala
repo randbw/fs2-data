@@ -63,15 +63,15 @@ object Token {
     def getLength(bytes: List[String]): Int =
       bytes match {
         case byte :: Nil => Integer.parseInt(byte.drop(3), 2)
-        case _ => -1
-    }
+        case _           => -1
+      }
   }
 
   case object Str8 extends DynamicLength("string") {
     def getLength(bytes: List[String]): Int =
       bytes match {
         case byte :: Nil => Integer.parseInt(byte, 2)
-        case _ => -1
+        case _           => -1
       }
   }
 
@@ -79,7 +79,7 @@ object Token {
     def getLength(bytes: List[String]): Int =
       bytes match {
         case b :: bb :: Nil => Integer.parseInt(b.concat(bb), 2)
-        case _ => -1
+        case _              => -1
       }
   }
 
@@ -87,7 +87,31 @@ object Token {
     def getLength(bytes: List[String]): Int =
       bytes match {
         case b :: bb :: bbb :: bbbb :: Nil => Integer.parseInt(b.concat(bb).concat(bbb).concat(bbbb), 2)
-        case _ => -1
+        case _                             => -1
+      }
+  }
+
+  case object Bin8 extends DynamicLength("bin") {
+    def getLength(bytes: List[String]): Int =
+      bytes match {
+        case byte :: Nil => Integer.parseInt(byte, 2)
+        case _           => -1
+      }
+  }
+
+  case object Bin16 extends DynamicLength("bin") {
+    def getLength(bytes: List[String]): Int =
+      bytes match {
+        case b :: bb :: Nil => Integer.parseInt(b.concat(bb), 2)
+        case _              => -1
+      }
+  }
+
+  case object Bin32 extends DynamicLength("bin") {
+    def getLength(bytes: List[String]): Int =
+      bytes match {
+        case b :: bb :: bbb :: bbbb :: Nil => Integer.parseInt(b.concat(bb).concat(bbb).concat(bbbb), 2)
+        case _                             => -1
       }
   }
 }
