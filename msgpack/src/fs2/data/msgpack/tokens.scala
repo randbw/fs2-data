@@ -98,7 +98,7 @@ object Token {
 
   case object Str8 extends DynamicLength("string") {
     def getLength(bytes: List[String]): Int =
-      DynamicLength.getLengthFromOne(b)
+      DynamicLength.getLengthFromOne(bytes)
   }
 
   case object Str16 extends DynamicLength("string") {
