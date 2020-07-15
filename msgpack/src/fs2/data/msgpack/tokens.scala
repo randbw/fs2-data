@@ -28,13 +28,34 @@ abstract class DynamicLength(val kind: String) extends Token {
 }
 
 object DynamicLength {
-  def getLength(b: String, minus1: Boolean): Int =
+
+  def getLengthFromPortion(bytes: List[String], toDrop: Int): Int =
+    bytes.headOption
+      .fold(-1)(b => parseLengthFromByte(b.drop(toDrop), minus1 = false))
+
+  def getLengthFromOne(bytes: List[String]): Int =
+    bytes.headOption
+      .fold(-1)(b => parseLengthFromByte(b, minus1 = true))
+
+  def getLengthFromTwo(bytes: List[String]): Int =
+    bytes match {
+      case b :: bb :: Nil => parseLengthFromByte(b, bb)
+      case _              => -1
+    }
+
+  def getLengthFromFour(bytes: List[String]): Int =
+    bytes match {
+      case b :: bb :: bbb :: bbbb :: Nil => parseLengthFromByte(b, bb, bbb, bbb)
+      case _                             => -1
+    }
+
+  private def parseLengthFromByte(b: String, minus1: Boolean): Int =
     Integer.parseInt(b, 2) - { if (minus1) 1 else 0 }
 
-  def getLength(b: String, bb: String): Int =
+  private def parseLengthFromByte(b: String, bb: String): Int =
     Integer.parseInt(b.concat(bb), 2) - 1
 
-  def getLength(b: String, bb: String, bbb: String, bbbb: String): Int =
+  private def parseLengthFromByte(b: String, bb: String, bbb: String, bbbb: String): Int =
     Integer.parseInt(b.concat(bb).concat(bbb).concat(bbbb), 2) - 1
 }
 
@@ -72,73 +93,51 @@ object Token {
 
   case object FixStr extends DynamicLength("string") {
     def getLength(bytes: List[String]): Int =
-      bytes.headOption
-        .fold(-1)(b => DynamicLength.getLength(b.drop(3), minus1 = false))
+      DynamicLength.getLengthFromPortion(bytes, toDrop = 3)
   }
 
   case object Str8 extends DynamicLength("string") {
     def getLength(bytes: List[String]): Int =
-      bytes.headOption
-        .fold(-1)(b => DynamicLength.getLength(b, minus1 = true))
+      DynamicLength.getLengthFromOne(b)
   }
 
   case object Str16 extends DynamicLength("string") {
     def getLength(bytes: List[String]): Int =
-      bytes match {
-        case b :: bb :: Nil => DynamicLength.getLength(b, bb)
-        case _              => -1
-      }
+      DynamicLength.getLengthFromTwo(bytes)
   }
 
   case object Str32 extends DynamicLength("string") {
     def getLength(bytes: List[String]): Int =
-      bytes match {
-        case b :: bb :: bbb :: bbbb :: Nil => DynamicLength.getLength(b, bb, bbb, bbb)
-        case _                             => -1
-      }
+      DynamicLength.getLengthFromFour(bytes)
   }
 
   case object Bin8 extends DynamicLength("bin") {
     def getLength(bytes: List[String]): Int =
-      bytes.headOption
-        .fold(-1)(b => DynamicLength.getLength(b, minus1 = true))
+      DynamicLength.getLengthFromOne(bytes)
   }
 
   case object Bin16 extends DynamicLength("bin") {
     def getLength(bytes: List[String]): Int =
-      bytes match {
-        case b :: bb :: Nil => DynamicLength.getLength(b, bb)
-        case _              => -1
-      }
+      DynamicLength.getLengthFromTwo(bytes)
   }
 
   case object Bin32 extends DynamicLength("bin") {
     def getLength(bytes: List[String]): Int =
-      bytes match {
-        case b :: bb :: bbb :: bbbb :: Nil => DynamicLength.getLength(b, bb, bbb, bbbb)
-        case _                             => -1
-      }
+      DynamicLength.getLengthFromFour(bytes)
   }
 
   case object FixArray extends DynamicLength("array") {
     def getLength(bytes: List[String]): Int =
-      bytes.headOption
-        .fold(-1)(b => DynamicLength.getLength(b, minus1 = false))
+      DynamicLength.getLengthFromPortion(bytes, toDrop = 4)
   }
 
   case object Array16 extends DynamicLength("array") {
     def getLength(bytes: List[String]): Int =
-      bytes match {
-        case b :: bb :: Nil => DynamicLength.getLength(b, bb)
-        case _              => -1
-      }
+      DynamicLength.getLengthFromTwo(bytes)
   }
 
   case object Array32 extends DynamicLength("array") {
     def getLength(bytes: List[String]): Int =
-      bytes match {
-        case b :: bb :: bbb :: bbbb :: Nil => DynamicLength.getLength(b, bb, bbb, bbbb)
-        case _                             => -1
-      }
+      DynamicLength.getLengthFromFour(bytes)
   }
 }
