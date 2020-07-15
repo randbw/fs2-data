@@ -119,4 +119,26 @@ object Token {
         case _                             => -1
       }
   }
+
+  case object FixArray extends DynamicLength("array") {
+    def getLength(bytes: List[String]): Int =
+      bytes.headOption
+        .fold(-1)(b => DynamicLength.getLength(b, minus1 = false))
+  }
+
+  case object Array16 extends DynamicLength("array") {
+    def getLength(bytes: List[String]): Int =
+      bytes match {
+        case b :: bb :: Nil => DynamicLength.getLength(b, bb)
+        case _              => -1
+      }
+  }
+
+  case object Array32 extends DynamicLength("array") {
+    def getLength(bytes: List[String]): Int =
+      bytes match {
+        case b :: bb :: bbb :: bbbb :: Nil => DynamicLength.getLength(b, bb, bbb, bbbb)
+        case _                             => -1
+      }
+  }
 }
