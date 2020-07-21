@@ -59,6 +59,12 @@ object DynamicLength {
     Integer.parseInt(b.concat(bb).concat(bbb).concat(bbbb), 2) - 1
 }
 
+sealed trait Length
+
+case class NodeLength(numOfNodes: Int) extends Length
+
+case class ByteLength(numOfBytes: Int) extends Length
+
 object Token {
 
   case object NilByte extends FixedLength("nil", 1)
