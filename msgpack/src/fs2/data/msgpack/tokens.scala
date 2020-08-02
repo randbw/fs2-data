@@ -149,4 +149,19 @@ object Token {
     def getLength(bytes: List[String]): Length =
       NodeLength(DynamicLength.getLengthFromFour(bytes))
   }
+
+  case object FixMap extends DynamicLength("map") {
+    def getLength(bytes: List[String]): Length =
+      NodeLength(DynamicLength.getLengthFromPortion(bytes, toDrop = 4) * 2)
+  }
+
+  case object Map16 extends DynamicLength("map") {
+    def getLength(bytes: List[String]): Length =
+      NodeLength(DynamicLength.getLengthFromTwo(bytes) * 2)
+  }
+
+  case object Map32 extends DynamicLength("map") {
+    def getLength(bytes: List[String]): Length =
+      NodeLength(DynamicLength.getLengthFromFour(bytes) * 2)
+  }
 }
