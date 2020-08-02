@@ -21,14 +21,17 @@ sealed trait Token {
   def kind: String
 }
 
-abstract class FixedLength(val kind: String, val length: Int) extends Token
+abstract class FixedLength(val kind: String, numberOfBytes: Int) extends Token {
+  val length: Length = ByteLength(numberOfBytes)
+}
 
 abstract class DynamicLength(val kind: String) extends Token {
-  def getLength(bytes: List[String]): Int
+  def getLength(bytes: List[String]): Length
 }
 
 object DynamicLength {
 
+  // TODO: think about whether these should accommodate errors when parsing length
   def getLengthFromPortion(bytes: List[String], toDrop: Int): Int =
     bytes.headOption
       .fold(-1)(b => parseLengthFromByte(b.drop(toDrop), minus1 = false))
@@ -98,52 +101,52 @@ object Token {
   case object Float64Bit extends FixedLength("float", 9)
 
   case object FixStr extends DynamicLength("string") {
-    def getLength(bytes: List[String]): Int =
-      DynamicLength.getLengthFromPortion(bytes, toDrop = 3)
+    def getLength(bytes: List[String]): Length =
+      ByteLength(DynamicLength.getLengthFromPortion(bytes, toDrop = 3))
   }
 
   case object Str8 extends DynamicLength("string") {
-    def getLength(bytes: List[String]): Int =
-      DynamicLength.getLengthFromOne(bytes)
+    def getLength(bytes: List[String]): Length =
+      ByteLength(DynamicLength.getLengthFromOne(bytes))
   }
 
   case object Str16 extends DynamicLength("string") {
-    def getLength(bytes: List[String]): Int =
-      DynamicLength.getLengthFromTwo(bytes)
+    def getLength(bytes: List[String]): Length =
+      ByteLength(DynamicLength.getLengthFromTwo(bytes))
   }
 
   case object Str32 extends DynamicLength("string") {
-    def getLength(bytes: List[String]): Int =
-      DynamicLength.getLengthFromFour(bytes)
+    def getLength(bytes: List[String]): Length =
+      ByteLength(DynamicLength.getLengthFromFour(bytes))
   }
 
   case object Bin8 extends DynamicLength("bin") {
-    def getLength(bytes: List[String]): Int =
-      DynamicLength.getLengthFromOne(bytes)
+    def getLength(bytes: List[String]): Length =
+      ByteLength(DynamicLength.getLengthFromOne(bytes))
   }
 
   case object Bin16 extends DynamicLength("bin") {
-    def getLength(bytes: List[String]): Int =
-      DynamicLength.getLengthFromTwo(bytes)
+    def getLength(bytes: List[String]): Length =
+      ByteLength(DynamicLength.getLengthFromTwo(bytes))
   }
 
   case object Bin32 extends DynamicLength("bin") {
-    def getLength(bytes: List[String]): Int =
-      DynamicLength.getLengthFromFour(bytes)
+    def getLength(bytes: List[String]): Length =
+      ByteLength(DynamicLength.getLengthFromFour(bytes))
   }
 
   case object FixArray extends DynamicLength("array") {
-    def getLength(bytes: List[String]): Int =
-      DynamicLength.getLengthFromPortion(bytes, toDrop = 4)
+    def getLength(bytes: List[String]): Length =
+      NodeLength(DynamicLength.getLengthFromPortion(bytes, toDrop = 4))
   }
 
   case object Array16 extends DynamicLength("array") {
-    def getLength(bytes: List[String]): Int =
-      DynamicLength.getLengthFromTwo(bytes)
+    def getLength(bytes: List[String]): Length =
+      NodeLength(DynamicLength.getLengthFromTwo(bytes))
   }
 
   case object Array32 extends DynamicLength("array") {
-    def getLength(bytes: List[String]): Int =
-      DynamicLength.getLengthFromFour(bytes)
+    def getLength(bytes: List[String]): Length =
+      NodeLength(DynamicLength.getLengthFromFour(bytes))
   }
 }
