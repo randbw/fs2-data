@@ -152,7 +152,7 @@ private[xml] object EventParser {
       if (isNCNameStart(c)) {
         val sb = new StringBuilder
         untilChar(ctx.nextIdx, c => !isNCNameChar(c), sb.append(c)).map { ctx =>
-          (ctx, sb.result)
+          (ctx, sb.result())
         }
       } else {
         fail[F, Result[F, String]]("5", s"character '$c' cannot start a NCName", ctx.chunkAcc)
@@ -274,7 +274,7 @@ private[xml] object EventParser {
           accept(ctx, '?', "16", "unexpected end of input").flatMap { ctx =>
             peekChar(ctx).flatMap {
               case Some((ctx, '>')) =>
-                Pull.pure((ctx.nextIdx, sb.result))
+                Pull.pure((ctx.nextIdx, sb.result()))
               case Some((ctx, _)) =>
                 loop(ctx, sb.append('?'))
               case None =>
@@ -338,7 +338,7 @@ private[xml] object EventParser {
 
             val sb = new StringBuilder
             untilChar(ctx, pred, sb).flatMap { ctx =>
-              Pull.pure((ctx.nextIdx, sb.result))
+              Pull.pure((ctx.nextIdx, sb.result()))
             }
         }
     }
@@ -436,7 +436,7 @@ private[xml] object EventParser {
               (ctx, value) <- readAttributeValue(ctx, is11, Some(delimiter), new StringBuilder, new VectorBuilder)
               res <- loop(ctx, attributes += Attr(name, value))
             } yield res
-          case Some((ctx, _)) => Pull.pure((ctx, attributes.result.toList))
+          case Some((ctx, _)) => Pull.pure((ctx, attributes.result().toList))
           case None           => fail[F, Result[F, List[Attr]]]("1", "unexpected end of input", Nil)
         }
       }
@@ -455,7 +455,7 @@ private[xml] object EventParser {
         case (ctx, c) if Some(c) == delim =>
           if (!current.isEmpty)
             builder += XmlEvent.XmlString(current.toString, false)
-          Pull.pure((ctx, builder.result.toList))
+          Pull.pure((ctx, builder.result().toList))
         case (ctx, '\r') =>
           nextChar(ctx).flatMap {
             case (ctx, '\n') =>
@@ -526,7 +526,7 @@ private[xml] object EventParser {
           peekChar(ctx).flatMap {
             case Some((ctx, ']')) =>
               checkCDATAEnd(ctx.nextIdx, sb).flatMap {
-                case (ctx, true)  => Pull.pure((ctx, sb.result))
+                case (ctx, true)  => Pull.pure((ctx, sb.result()))
                 case (ctx, false) => readCDATABody(ctx, sb)
               }
             case Some((ctx, _)) =>
@@ -706,7 +706,7 @@ private[xml] object EventParser {
       ctx <- accept(ctx, '.', "26", "expected dot")
       sb = new StringBuilder("1.")
       ctx <- untilChar(ctx, !_.isDigit, sb)
-      version = sb.result
+      version = sb.result()
       res <- if (version.length == 2) {
         fail[F, Result[F, (Boolean, XmlEvent.XmlDecl)]]("26", "expected non empty minor version", ctx.chunkAcc)
       } else {
@@ -744,9 +744,11 @@ private[xml] object EventParser {
                 !((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '.' || c == '_' || c == '-'),
               sb)
             ctx <- accept(ctx, delimiter, "80", "'encoding' attribute value must end with proper delimiter")
-          } yield (ctx, (false, Some(sb.result)))
+          } yield (ctx, (false, Some(sb.result())))
         } else {
-          fail[F, Result[F, (Boolean, Option[String])]]("80", "expected space before 'encoding' attribute", ctx.chunkAcc)
+          fail[F, Result[F, (Boolean, Option[String])]]("80",
+                                                        "expected space before 'encoding' attribute",
+                                                        ctx.chunkAcc)
         }
       case Some((ctx, _)) =>
         Pull.pure((ctx, (hasSpace, None)))
@@ -852,7 +854,9 @@ private[xml] object EventParser {
           // we are done reading that content
           Pull.pure(ctx.accumulate(last))
         case XmlEvent.EndTag(n) =>
-          fail[F, Context[F]]("GIMatch", s"unexpected closing tag '</${n.render}>' (expected '</${name.render}>')", ctx.chunkAcc)
+          fail[F, Context[F]]("GIMatch",
+                              s"unexpected closing tag '</${n.render}>' (expected '</${name.render}>')",
+                              ctx.chunkAcc)
         case XmlEvent.StartTag(name1, _, false) =>
           // parse child element, and continue
           readContent(ctx.accumulate(last), is11, name1).flatMap(ctx => readContent(ctx, is11, name))

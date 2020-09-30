@@ -13,14 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package fs2.data.csv
+package fs2.data.json
+package mergepatch
 
-class CsvException(msg: String, inner: Throwable = null) extends Exception(msg, inner)
+import circe._
+import diffson.circe._
 
-class DecoderError(msg: String, inner: Throwable = null) extends CsvException(msg, inner)
+import io.circe.Json
 
-class HeaderError(msg: String, inner: Throwable = null) extends CsvException(msg, inner)
+class CirceJsonMergePatchTest extends JsonMergePatchTest[Json] {
+  def makeInt(i: Int): Json = Json.fromInt(i)
 
-/** Raised when processing a Csv row whose width doesn't match the width of the Csv header row */
-class HeaderSizeError(msg: String, val expectedColumns: Int, val actualColumns: Int, inner: Throwable = null)
-    extends HeaderError(msg, inner)
+  def makeString(s: String): Json = Json.fromString(s)
+
+  def makeTrue: Json = Json.True
+
+}
