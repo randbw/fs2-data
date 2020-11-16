@@ -225,3 +225,13 @@ lazy val benchmarks = project
     )
   )
   .dependsOn(csv.jvm)
+
+lazy val msgpack = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Full)
+  .in(file("msgpack"))
+  .settings(commonSettings)
+  .settings(publishSettings)
+  .settings(
+    name := "fs2-data-msgpack",
+    description := "Streaming msgpack manipulation library"
+  )
