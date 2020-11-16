@@ -1,6 +1,6 @@
 val scala212 = "2.12.12"
 val scala213 = "2.13.3"
-val fs2Version = "2.4.4"
+val fs2Version = "2.4.5"
 val circeVersion = "0.13.0"
 val shapelessVersion = "2.3.3"
 
@@ -8,7 +8,6 @@ val commonSettings = List(
   scalaVersion := scala212,
   crossScalaVersions := Seq(scala213, scala212),
   organization := "org.gnieh",
-  version := "0.8.0-SNAPHSOT",
   licenses += ("The Apache Software License, Version 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
   homepage := Some(url("https://github.com/satabin/fs2-data")),
   scalacOptions ++= List("-feature",
@@ -27,46 +26,28 @@ val commonSettings = List(
   addCompilerPlugin("org.typelevel" % "kind-projector" % "0.10.3" cross CrossVersion.binary),
   addCompilerPlugin("com.olegpy" % "better-monadic-for" % "0.3.1" cross CrossVersion.binary),
   libraryDependencies ++= List(
-    "co.fs2" %% "fs2-core" % fs2Version,
-    "org.scala-lang.modules" %% "scala-collection-compat" % "2.2.0",
-    "org.scalatest" %% "scalatest" % "3.2.2" % "test",
-    "io.circe" %% "circe-parser" % circeVersion % "test",
+    "co.fs2" %%% "fs2-core" % fs2Version,
+    "org.scala-lang.modules" %%% "scala-collection-compat" % "2.2.0",
+    "org.scalatest" %%% "scalatest" % "3.2.3" % "test",
+    "io.circe" %%% "circe-parser" % circeVersion % "test",
     "co.fs2" %% "fs2-io" % fs2Version % "test",
     "com.github.pathikrit" %% "better-files" % "3.9.1" % "test"
   ),
-  Compile / scalaSource := baseDirectory.value / "src",
-  Compile / resourceDirectory := baseDirectory.value / "resources",
-  Test / scalaSource := baseDirectory.value / "test" / "src",
-  Test / resourceDirectory := baseDirectory.value / "test" / "resources"
+  scmInfo := Some(ScmInfo(url("https://github.com/satabin/fs2-data"), "scm:git:git@github.com:satabin/fs2-data.git"))
 )
 
 val publishSettings = List(
-  publishMavenStyle := true,
   publishArtifact in Test := false,
-  // The Nexus repo we're publishing to.
-  publishTo := Some(
-    if (isSnapshot.value)
-      Opts.resolver.sonatypeSnapshots
-    else
-      Opts.resolver.sonatypeStaging
-  ),
   pomIncludeRepository := { x =>
     false
   },
+  developers := List(
+    Developer(id = "satabin",
+              name = "Lucas Satabin",
+              email = "lucas.satabin@gnieh.org",
+              url = url("https://github.com/satabin"))
+  ),
   pomExtra := (
-    <scm>
-      <url>https://github.com/satabin/fs2-data</url>
-      <connection>scm:git:git://github.com/satabin/fs2-data.git</connection>
-      <developerConnection>scm:git:git@github.com:satabin/fs2-data.git</developerConnection>
-      <tag>HEAD</tag>
-    </scm>
-    <developers>
-      <developer>
-        <id>satabin</id>
-        <name>Lucas Satabin</name>
-        <email>lucas.satabin@gnieh.org</email>
-      </developer>
-    </developers>
     <ciManagement>
       <system>travis</system>
       <url>https://travis-ci.org/#!/satabin/fs2-data</url>
@@ -80,21 +61,50 @@ val publishSettings = List(
 
 val root = (project in file("."))
   .settings(commonSettings)
-  .enablePlugins(ScalaUnidocPlugin)
+  .enablePlugins(ScalaUnidocPlugin, SiteScaladocPlugin, NanocPlugin, GhpagesPlugin)
   .settings(
     name := "fs2-data",
     publishArtifact := false,
-    skip in publish := true
+    skip in publish := true,
+    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(benchmarks,
+                                                                               csv.js,
+                                                                               csvGeneric.js,
+                                                                               json.js,
+                                                                               jsonCirce.js,
+                                                                               jsonDiffson.js,
+                                                                               xml.js),
+    siteSubdirName in ScalaUnidoc := "api",
+    addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), siteSubdirName in ScalaUnidoc),
+    Nanoc / sourceDirectory := file("site"),
+    git.remoteRepo := scmInfo.value.get.connection.replace("scm:git:", ""),
+    ghpagesNoJekyll := true
   )
-  .aggregate(csv, csvGeneric, json, jsonCirce, jsonDiffson, jsonInterpolators, xml)
+  .aggregate(
+    csv.jvm,
+    csv.js,
+    csvGeneric.jvm,
+    csvGeneric.js,
+    json.jvm,
+    json.js,
+    jsonCirce.jvm,
+    jsonCirce.js,
+    jsonDiffson.jvm,
+    jsonDiffson.js,
+    jsonInterpolators,
+    xml.jvm,
+    xml.js
+  )
 
-lazy val csv = project
+lazy val csv = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Full)
   .in(file("csv"))
   .settings(commonSettings)
   .settings(publishSettings)
   .settings(name := "fs2-data-csv", description := "Streaming CSV manipulation library")
+  .jsSettings(libraryDependencies += "io.github.cquiroz" %%% "scala-java-time" % "2.0.0" % Test)
 
-lazy val csvGeneric = project
+lazy val csvGeneric = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Pure)
   .in(file("csv/generic"))
   .settings(commonSettings)
   .settings(publishSettings)
@@ -102,7 +112,7 @@ lazy val csvGeneric = project
     name := "fs2-data-csv-generic",
     description := "Generic CSV row decoder generation",
     libraryDependencies ++= List(
-      "com.chuusai" %% "shapeless" % shapelessVersion,
+      "com.chuusai" %%% "shapeless" % shapelessVersion,
       "org.scala-lang" % "scala-reflect" % scalaVersion.value
     ),
     libraryDependencies ++=
@@ -125,17 +135,20 @@ lazy val csvGeneric = project
       .toList
       .flatten
   )
+  .jsSettings(libraryDependencies += "io.github.cquiroz" %%% "scala-java-time" % "2.0.0" % Test)
   .dependsOn(csv)
 
-lazy val json = project
+lazy val json = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Full)
   .in(file("json"))
   .settings(commonSettings)
   .settings(publishSettings)
   .settings(name := "fs2-data-json",
             description := "Streaming JSON manipulation library",
-            libraryDependencies ++= List("org.gnieh" %% "diffson-circe" % "4.0.2" % "test"))
+            libraryDependencies ++= List("org.gnieh" %%% "diffson-circe" % "4.0.3" % "test"))
 
-lazy val jsonCirce = project
+lazy val jsonCirce = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Full)
   .in(file("json/circe"))
   .settings(commonSettings)
   .settings(publishSettings)
@@ -143,12 +156,13 @@ lazy val jsonCirce = project
     name := "fs2-data-json-circe",
     description := "Streaming JSON library with support for circe ASTs",
     libraryDependencies ++= List(
-      "io.circe" %% "circe-core" % circeVersion
+      "io.circe" %%% "circe-core" % circeVersion
     )
   )
   .dependsOn(json % "compile->compile;test->test", jsonDiffson % "test->test")
 
-lazy val jsonDiffson = project
+lazy val jsonDiffson = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Pure)
   .in(file("json/diffson"))
   .settings(commonSettings)
   .settings(publishSettings)
@@ -156,7 +170,7 @@ lazy val jsonDiffson = project
     name := "fs2-data-json-diffson",
     description := "Streaming JSON library with support for patches",
     libraryDependencies ++= List(
-      "org.gnieh" %% "diffson-core" % "4.0.3"
+      "org.gnieh" %%% "diffson-core" % "4.0.3"
     )
   )
   .dependsOn(json % "compile->compile;test->test")
@@ -173,9 +187,10 @@ lazy val jsonInterpolators = project
       "org.scala-lang" % "scala-reflect" % scalaVersion.value
     )
   )
-  .dependsOn(json % "compile->compile;test->test")
+  .dependsOn(json.jvm % "compile->compile;test->test")
 
-lazy val xml = project
+lazy val xml = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Full)
   .in(file("xml"))
   .settings(commonSettings)
   .settings(publishSettings)
@@ -194,10 +209,11 @@ lazy val documentation = project
     libraryDependencies ++= List(
       "com.beachape" %% "enumeratum" % "1.5.15",
       "org.gnieh" %% "diffson-circe" % "4.0.3",
+      "io.circe" %% "circe-generic-extras" % circeVersion,
       "co.fs2" %% "fs2-io" % fs2Version
     )
   )
-  .dependsOn(csv, csvGeneric, json, jsonDiffson, jsonCirce, jsonInterpolators, xml)
+  .dependsOn(csv.jvm, csvGeneric.jvm, json.jvm, jsonDiffson.jvm, jsonCirce.jvm, jsonInterpolators, xml.jvm)
 
 lazy val benchmarks = project
   .in(file("benchmarks"))
@@ -208,4 +224,4 @@ lazy val benchmarks = project
       "com.github.pathikrit" %% "better-files" % "3.9.1"
     )
   )
-  .dependsOn(csv)
+  .dependsOn(csv.jvm)
